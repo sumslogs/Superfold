@@ -46,8 +46,8 @@ def readCommandList(fIN):
 
 def submitJob(command):
     pid = os.getpid()
-    logname = '.job-{0}.log'.format(pid)
-    errname = '.job-{0}.err'.format(pid)
+    logname = f'.job-{pid}.log'
+    errname = f'.job-{pid}.err'
     #print 'running:>% {0}'.format(' '.join(command))
     try:
         log = open(logname,'w')
@@ -59,7 +59,7 @@ def submitJob(command):
         os.remove(errname)
         return 0
     except:
-        print 'Job Failed:>% {0}'.format(' '.join(command))
+        print(f"Job Failed:>% {' '.join(command)}")
         return 1
     
 def parseArgs():
@@ -80,7 +80,7 @@ def progress(num,outof):
     line += meter[:width-4]
     line += ']'
     
-    line += ' %s / %s' % (int(num),int(outof))
+    line += f' {int(num)} / {int(outof)}'
     if num == 1:
         sys.stdout.write(line)
     elif num==outof:
@@ -154,7 +154,7 @@ def batchSubmit(jobCommands, nproc=4):
             for i in range(len(jobTrack)):
                 if jobTrack[i] == 0:
                     currJobs[i] = Process(target=submitJob,args=(a,))
-                    print 'running:>% {0}'.format(' '.join(a))
+                    print(f"running:>% {' '.join(a)}")
                     currJobs[i].start()
                     #continue
                     break
@@ -173,7 +173,7 @@ if __name__ == '__main__':
     # read and parse the commands
     x = readCommandList(args.commandList)
     
-    print x
+    print(x)
     batchSubmit(x, args.n)
     sys.exit()
     
@@ -236,5 +236,5 @@ if __name__ == '__main__':
     
  
     if args.time:
-        print 'Total Runtime: {0:.4f} seconds'.format(time.time() - start)
+        print(f'Total Runtime: {time.time() - start:.4f} seconds')
     

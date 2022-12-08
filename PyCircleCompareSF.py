@@ -71,7 +71,7 @@ class CT:
     def writeCT(self,fOUT):
         #writes a ct file
         w = open(fOUT,'w')
-        line = '{0:6d} {1}\n'.format(len(self.num),self.name)
+        line = f'{len(self.num):6d} {self.name}\n'
         for i in range(len(self.num)-1):
         #line+='{0:5d} {1} {2:5d} {3:5d} {4:5d} {5:5d} {0:5d}\n'\
         #.format(self.num[i],self.seq[i],self.num[i]-1,self.num[i]+1,self.ct[i])
@@ -110,7 +110,7 @@ class CT:
         """
         length = len(seq)
         
-        self.num = range(1,length+1)
+        self.num = list(range(1,length+1))
         self.seq=seq
         
         #give it a name if it has one
@@ -124,10 +124,10 @@ class CT:
         
         for i,j in pairs:
             if self.ct[i-1]!=0:
-                print 'Warning: conflicting pairs, (%s - %s) : (%s - %s)' % (str(i),str(j),str(self.ct[i-1]),str(i))
+                print(f'Warning: conflicting pairs, ({str(i)} - {str(j)}) : ({str(self.ct[i - 1])} - {str(i)})')
                 if skipConflicting: continue
             if self.ct[j-1]!=0:
-                print 'Warning: conflicting pairs, (%s - %s) : (%s - %s)' % (str(i),str(j),str(j),str(self.ct[j-1]))
+                print(f'Warning: conflicting pairs, ({str(i)} - {str(j)}) : ({str(j)} - {str(self.ct[j - 1])})')
                 if skipConflicting: continue
             self.ct[i-1]=j
             self.ct[j-1]=i
@@ -141,7 +141,7 @@ class CT:
         
         out = CT()
         out.seq = self.seq[start-1:end]
-        out.num = range(1,end-start+2)
+        out.num = list(range(1,end-start+2))
         out.name = self.name + '_cut_'+str(start)+'_'+str(end)
         
         out.ct = []
@@ -168,7 +168,7 @@ class CT:
         
         #error out if nucleotide out of range
         if max(i,j) > len(self.ct):
-            print 'Error!, nucleotide {0} out of range!'.format(max(i,j)+1)
+            print(f'Error!, nucleotide {max(i, j) + 1} out of range!')
             return
         
         #i must always be less than j, correct for this
@@ -311,7 +311,7 @@ class CT:
         """
         rna = self.copy()
         # fill in 1,1 mismatch, 2,2 mismatch
-        for i in xrange(len(rna.ct)-3):
+        for i in range(len(rna.ct)-3):
             if rna.ct[i+1] == 0:
                 if rna.ct[i] - rna.ct[i+2] == 2:
                     rna.ct[i+1] = rna.ct[i] - 1
@@ -358,8 +358,8 @@ class CT:
         # append them to a list if they have it.
         overlaps = [] # stores the helix number
         
-        for i in xrange(heNum):
-            for j in xrange(i+1,heNum):
+        for i in range(heNum):
+            for j in range(i+1,heNum):
                 if checkOverlap(helicies[i],helicies[j]):
                     overlaps.append((i,j))
         
@@ -375,7 +375,7 @@ class CT:
         for i,j in overlaps:
             allHelix.append(i), allHelix.append(j)
         pk1Helix = max(set(allHelix), key=allHelix.count)
-        pk2Helix = filter(lambda x: x != pk1Helix, allHelix)
+        pk2Helix = [x for x in allHelix if x != pk1Helix]
         
         # construct list of base pairs
         pk1 = helicies[pk1Helix]
@@ -485,15 +485,15 @@ def genPairingString(correct, missing, extra, slipped, length):
         
         for pair in correct:
             if pair[0] == nt+1:
-                line += '[{0} {1} 0.40 0.40 0.40 {2}]\n'.format(pair[0],pair[1],int(pair in slipped))
+                line += f'[{pair[0]} {pair[1]} 0.40 0.40 0.40 {int(pair in slipped)}]\n'
                 count += 1
         for pair in missing:
             if pair[0] == nt+1:
-                line += '[{0} {1} 1.00 0.00 0.00 {2}]\n'.format(pair[0],pair[1],int(pair in slipped))
+                line += f'[{pair[0]} {pair[1]} 1.00 0.00 0.00 {int(pair in slipped)}]\n'
                 count += 1
         for pair in extra:
             if pair[0] == nt+1:
-                line += '[{0} {1} 0.40 0.00 0.60 {2}]\n'.format(pair[0],pair[1],int(pair in slipped))
+                line += f'[{pair[0]} {pair[1]} 0.40 0.00 0.60 {int(pair in slipped)}]\n'
                 count += 1
     return line, count
 
@@ -549,12 +549,12 @@ def genCorrelString(correlDat):
     line = ""
     count = 0
     length = len(correlDat['i'])
-    for num in xrange(length):
+    for num in range(length):
         if correlDat['correl'][num] > 0.035:
-            line += '[{0} {1} 0.00 0.50 0.00 {2}]\n'.format(correlDat['i'][num],correlDat['j'][num],0)
+            line += f"[{correlDat['i'][num]} {correlDat['j'][num]} 0.00 0.50 0.00 {0}]\n"
             count += 1
         elif correlDat['correl'][num] > 0.025:
-            line += '[{0} {1} 0.80 0.80 0.10 {2}]\n'.format(correlDat['i'][num],correlDat['j'][num],0)
+            line += f"[{correlDat['i'][num]} {correlDat['j'][num]} 0.80 0.80 0.10 {0}]\n"
             count += 1
     return line, count
 
@@ -590,7 +590,7 @@ def makeCircle(ct_pred, ct_correct, shannon, shape, correlDat, slipped, diffColo
     ppv = bpCorrect/float(len(correct)+len(extra))
 
 
-    Circle = """%!
+    Circle = f"""%!
 
 % Set font size and type.
 /fontSize 24 def
@@ -598,26 +598,26 @@ def makeCircle(ct_pred, ct_correct, shannon, shape, correlDat, slipped, diffColo
 /halfFont fontSize 2 div def
 /Courier findfont fontSize scalefont setfont
 % Set variables handling number, placement of nucleotides.
-/numBases {0} def
+/numBases {len(ct_correct.ct)} def
 /currentBase 0 def
 /basePoints numBases array def
 
 % Set variables handling scaling, translation of circular backbone.
-/scaleFactor {1} def
+/scaleFactor {scaleFactor} def
 /scaleFactorX scaleFactor def
 /scaleFactorY scaleFactor def
 /translateFactorX 0 def
 /translateFactorY 0 def
 
 % Set variables handling properties of circular backbone.
-/radius {2} def
+/radius {cirRadius} def
 /center 306 scaleFactor div def
 /angle 360 numBases 2 add div -1 mul def
 /labelSpace 40 def
 
 % Create the array of nucleotides.
 /bases [
-""".format(len(ct_correct.ct),scaleFactor,cirRadius)
+"""
 
     Circle += ' '.join(map('({0})'.format, ct_correct.seq)) # lists sequence as '(A) (G)...'
     Circle +="""
@@ -785,18 +785,18 @@ translateFactorX translateFactorY translate
 
  % Set variables handling number, placement of nucleotides.
  /numBasesf {1}""".format(numPairs,len(ct_correct.ct),offset)
-    Circle += """ def
+    Circle += f""" def
  /currentBasef 0 def
  /basePointsf numBasesf array def
  
  
  % Set variables handling properties of circular backbone.
- /radiusf {0} def
+ /radiusf {int(cirRadius + 10)} def
  /centerf 306 scaleFactor div def
  /anglef 359.75 numBases 2 add div -1 mul def
  /labelSpace 20 def
  
- /annotationsf [ """.format(int(cirRadius+10)) + shannonColoring + """
+ /annotationsf [ """ + shannonColoring + """
  ] def
  
  
@@ -898,7 +898,7 @@ showpage
 
 if __name__ == '__main__':
     if len(sys.argv) <=3:
-        print 'Usage: CircleDMS.py structure.ct correlData.txt output.ps'
+        print('Usage: CircleDMS.py structure.ct correlData.txt output.ps')
         sys.exit()
     ct_pred = CT(sys.argv[1])
     

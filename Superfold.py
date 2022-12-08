@@ -61,16 +61,16 @@ class shapeMAP:
         if fIN:
             parsed = self.readFile(fIN)
             
-            self.ntNum = map(int,parsed[0])
-            self.shape = map(float,parsed[1])
-            self.stdErr= map(float,parsed[2])
+            self.ntNum = list(map(int,parsed[0]))
+            self.shape = list(map(float,parsed[1]))
+            self.stdErr= list(map(float,parsed[2]))
             self.seq = parsed[3]
             
-            if len(parsed.keys()) == 5:
+            if len(list(parsed.keys())) == 5:
                 try:
-                    self.zfactor = map(float,parsed[4])
+                    self.zfactor = list(map(float,parsed[4]))
                 except:
-                    print "formatting error: {0}\nNon float in zfactor column".format(fIN)
+                    print(f"formatting error: {fIN}\nNon float in zfactor column")
                     sys.exit()
             # replace T's with U's
             for i in range(len(self.seq)):
@@ -80,7 +80,7 @@ class shapeMAP:
     def readFile(self,fIN):
         data = {}
         lineNum = 0
-        for line in open(fIN, "rU").readlines():
+        for line in open(fIN, "r").readlines():
             x = line.rstrip().split()
             
             # initialize an array obj for the first line
@@ -116,7 +116,7 @@ def main():
     # set the results directory
     resultsDir = "results_"+args.safeName
     
-    print resultsDir
+    print(resultsDir)
     try:
         os.mkdir(resultsDir)
     except:
@@ -130,36 +130,36 @@ def main():
     # set location of the logfile
     logFile = open("{0}/log_{0}.txt".format(resultsDir),"a")
     sys.stdout = logFile
-    print >> sys.stderr, "log file location: {0}/log_{0}.txt".format(resultsDir)
+    print("log file location: {0}/log_{0}.txt".format(resultsDir), file=sys.stderr)
     
-    print "\n"*3,"#"*51
-    print """#    _____                     ______    _     _  #
+    print("\n"*3,"#"*51)
+    print("""#    _____                     ______    _     _  #
 #  /  ___|                     |  ___|  | |   | | #
 #  \ `--. _   _ _ __   ___ _ __| |_ ___ | | __| | #
 #   `--. \ | | | '_ \ / _ \ '__|  _/ _ \| |/ _` | #
 #  /\__/ / |_| | |_) |  __/ |  | || (_) | | (_| | #
 #  \____/ \__,_| .__/ \___|_|  \_| \___/|_|\__,_| #
 #              | |                                #
-#              |_|                                #"""                             
-    print "#{0: ^49}#".format( "" )
-    print "#{0: ^49}#".format( "Superfold ver. Alpha_22-Sept-2014" )
-    print "#{0: ^49}#".format( "" )
-    print "#{0: ^49}#".format("starting job: " + args.safeName)
-    print "#{0: ^49}#".format( time.strftime("%c") )
-    print "#{0: ^49}#".format( "" )
+#              |_|                                #""")                             
+    print(f"#{'': ^49}#")
+    print(f"#{'Superfold ver. Alpha_22-Sept-2014': ^49}#")
+    print(f"#{'': ^49}#")
+    print(f"#{'starting job: ' + args.safeName: ^49}#")
+    print(f"#{time.strftime('%c'): ^49}#")
+    print(f"#{'': ^49}#")
     
-    print "#"*51,"\n\n# Job Submitted with following attributes:"
-    print args, "\n"
+    print("#"*51,"\n\n# Job Submitted with following attributes:")
+    print(args, "\n")
     
     # first step is to run the partition function
-    print >> sys.stderr, "\nstarting Partition function calculation..."
+    print("\nstarting Partition function calculation...", file=sys.stderr)
     partitionPairing = dotPlot()
     
     if not debug:
         partitionPairing = generateAndRunPartition(args.mapObj, args.allConstraints,args.partitionWindowSize, args.partitionStepSize, args.safeName, args.SHAPEslope, args.SHAPEintercept, args.np, args.maxPairingDist)
     
     # write the partition function file
-    partitionFileName="{0}/merged_{1}.dp".format(resultsDir, args.safeName)
+    partitionFileName=f"{resultsDir}/merged_{args.safeName}.dp"
     
     if not debug:
         partitionPairing.writeDP(partitionFileName)
@@ -181,20 +181,20 @@ def main():
     bpShannonEntropy = partitionPairing.calcShannon()
     
     # write the shannon entropy in .shape format
-    shannonEntropyName = "{0}/shannon_{1}.txt".format(resultsDir, args.safeName)
+    shannonEntropyName = f"{resultsDir}/shannon_{args.safeName}.txt"
     writeSHAPE(bpShannonEntropy,shannonEntropyName)
     
     
     
     # generate the folded structure model
-    print >> sys.stderr, "starting Fold..."
+    print("starting Fold...", file=sys.stderr)
     
     initialStructure = CT()
     if not debug:
         initialStructure = generateAndRunFold(args.mapObj, args.allConstraints,dsConstraint, args.foldWindowSize, args.foldStepSize, args.safeName,args.SHAPEslope,args.SHAPEintercept,args.np, args.maxPairingDist)
     
     # write the folded structure
-    initialStructureFileName = "{0}/merged_{1}.ct".format(resultsDir, args.safeName)
+    initialStructureFileName = f"{resultsDir}/merged_{args.safeName}.ct"
     if not debug:
         initialStructure.writeCT(initialStructureFileName)
     
@@ -203,7 +203,7 @@ def main():
         initialStructure.readCT(initialStructureFileName)
     
     # write final files and figures
-    print >> sys.stderr, "drawing figures..."
+    print("drawing figures...", file=sys.stderr)
     
     # add in former pk constraints
     pkPair = []
@@ -212,7 +212,7 @@ def main():
     nonPKpairs = initialStructure.pairList()
     finalStructure = CT()
     finalStructure.pair2CT(nonPKpairs+pkPair, seq=initialStructure.seq,name='finalStructure wPKs')
-    finalStructureName = "{0}/merged_wPK_{1}.ct".format(resultsDir, args.safeName)
+    finalStructureName = f"{resultsDir}/merged_wPK_{args.safeName}.ct"
     
     # if there are pk pairs in the file, then write a second ct file with pk's included
     if pkPair != []:
@@ -220,39 +220,39 @@ def main():
     
     # calcualte low shannon/shape regions with expansions based on structure
     
-    shannonShapeName = "{0}/shannonShape_{1}.pdf".format(resultsDir, args.safeName)
+    shannonShapeName = f"{resultsDir}/shannonShape_{args.safeName}.pdf"
     
     lowSHAPEregions = mainShannonFunc(args.mapObj.origSHAPE, bpShannonEntropy, shannonShapeName, finalStructure)
     
     
     # plot the arcs along with the shannon/shape reactivities
-    arcFileName = "{0}/arcPlot_{1}.pdf".format(resultsDir, args.safeName)
+    arcFileName = f"{resultsDir}/arcPlot_{args.safeName}.pdf"
     ensembleRNA_splitPlot(partitionPairing, initialStructure, pk=pkPair, outFile=arcFileName)
     
     # export the structures of the low shannon/shape regions
     maxChar = len(str(lowSHAPEregions[-1][1]))
     
     # file for containing all regions
-    ps_comb = "{0}/regions_{1}.ps".format(resultsDir,args.safeName)
+    ps_comb = f"{resultsDir}/regions_{args.safeName}.ps"
     ps_write = open(ps_comb, "w")
     
     if args.noPVclient:
         try:
             import pvclient
         except:
-            print "PVclient failed to load"
+            print("PVclient failed to load")
             args.drawPVclient = False
     
     for i,j in lowSHAPEregions:
         #define file names
-        print >> sys.stderr, i,j
+        print(i,j, file=sys.stderr)
         ct_name = "{2}/regions/region_{3}_{0:0>{maxChar}}_{1:0>{maxChar}}.ct".format(i,j,resultsDir,args.safeName,maxChar=maxChar)
         ps_name = "{2}/regions/region_{3}_{0:0>{maxChar}}_{1:0>{maxChar}}.ps".format(i,j,resultsDir,args.safeName,maxChar=maxChar)
         pvclient_name = "{2}/regions/region_{3}_{0:0>{maxChar}}_{1:0>{maxChar}}".format(i,j,resultsDir,args.safeName,maxChar=maxChar)
         
         # write new ct file
         x = finalStructure.cutCT(i,j)
-        x.name = "region {0}-{1}, ".format(i,j) + args.name
+        x.name = f"region {i}-{j}, " + args.name
         x.writeCT(ct_name)
         
         # circle plotting functions
@@ -271,15 +271,15 @@ def main():
             try:
                 pvclient.python_client(x, tmpSHAPE, i, pvclient_name)
             except:
-                print "Structure drawing failed Region {0}-{1}".format(i,j)
+                print(f"Structure drawing failed Region {i}-{j}")
     ps_write.close()
     
-    runtime = "{0:.2f}".format(time.time() - startTime)
-    print "\n","#"*51
-    print "#{0:^49}#".format("job finished: "+args.safeName)
-    print "#{0:^49}#".format( time.strftime("%c"))
-    print "#{0:^49}#".format("Total Runtime: " + runtime + " sec.")
-    print "#"*51
+    runtime = f"{time.time() - startTime:.2f}"
+    print("\n","#"*51)
+    print(f"#{'job finished: ' + args.safeName:^49}#")
+    print(f"#{time.strftime('%c'):^49}#")
+    print(f"#{'Total Runtime: ' + runtime + ' sec.':^49}#")
+    print("#"*51)
 
 
 def ensembleRNA_splitPlot(dpObj, ctObj, pk=None, outFile="arcs.pdf"):
@@ -371,7 +371,7 @@ def generateAndRunFold(mapObj, constraints, dsConstraints, windowSize, stepSize,
     if rnaLength-windowSize<200:
         cut_i = 1
         cut_j = rnaLength
-        fname = "{0}/{1}_{2}_{3}".format(dirname,prefix,cut_i,cut_j)
+        fname = f"{dirname}/{prefix}_{cut_i}_{cut_j}"
         genFiles(mapObj,constraints,dsConstraints,cut_i,cut_j,fname)
         
         foldCMD = "Fold {0}.seq {0}.ct -sh {0}.shape -sm {1} -si {2} -md {3} -C {0}.const -m 100 -w 0".format(fname, shapeSlope,shapeIntercept, maxDist)
@@ -384,7 +384,7 @@ def generateAndRunFold(mapObj, constraints, dsConstraints, windowSize, stepSize,
         for i in range(1,rnaLength-windowSize,stepSize):
             cut_i = i
             cut_j = i+windowSize-1
-            fname = "{0}/{1}_{2}_{3}".format(dirname,prefix,cut_i,cut_j)
+            fname = f"{dirname}/{prefix}_{cut_i}_{cut_j}"
             genFiles(mapObj,constraints,dsConstraints,cut_i,cut_j,fname)
             
             foldCMD = "Fold {0}.seq {0}.ct -sh {0}.shape -sm {1} -si {2} -md {3} -C {0}.const -m 100 -w 0".format(fname, shapeSlope,shapeIntercept, maxDist)
@@ -395,7 +395,7 @@ def generateAndRunFold(mapObj, constraints, dsConstraints, windowSize, stepSize,
         # 3prime folds
         for i in [-100,-50,50,100]:
             cut5prime_j = windowSize+i
-            fname = "{0}/{1}_{2}_{3}".format(dirname,prefix,1,cut5prime_j)
+            fname = f"{dirname}/{prefix}_{1}_{cut5prime_j}"
             genFiles(mapObj,constraints,dsConstraints,1,cut5prime_j,fname)
             
             foldCMD = "Fold {0}.seq {0}.ct -sh {0}.shape -sm {1} -si {2} -md {3} -C {0}.const -m 100 -w 0".format(fname, shapeSlope,shapeIntercept, maxDist)
@@ -403,7 +403,7 @@ def generateAndRunFold(mapObj, constraints, dsConstraints, windowSize, stepSize,
             jobQueue1.append(shlex.split(foldCMD))
             
             cut3prime_i = rnaLength-windowSize + i
-            fname = "{0}/{1}_{2}_{3}".format(dirname,prefix,cut3prime_i,rnaLength)
+            fname = f"{dirname}/{prefix}_{cut3prime_i}_{rnaLength}"
             genFiles(mapObj,constraints,dsConstraints,cut3prime_i,rnaLength,fname)
             
             foldCMD = "Fold {0}.seq {0}.ct -sh {0}.shape -sm {1} -si {2} -md {3} -C {0}.const -m 100 -w 0".format(fname, shapeSlope,shapeIntercept, maxDist)
@@ -463,7 +463,7 @@ def generateAndRunPartition(mapObj, constraints, windowSize, stepSize, prefix, s
     if rnaLength-windowSize < 200:
         cut_i = 1
         cut_j = rnaLength
-        fname = "{0}/{1}_{2}_{3}".format(dirname,prefix,cut_i,cut_j)
+        fname = f"{dirname}/{prefix}_{cut_i}_{cut_j}"
         genFiles(mapObj,constraints,{0:[],1:[]},cut_i,cut_j,fname)
         
         foldCMD = "partition {0}.seq {0}.pfs -sh {0}.shape -sm {1} -si {2} -md {3} -C {0}.const".format(fname, shapeSlope,shapeIntercept, maxDist)
@@ -480,7 +480,7 @@ def generateAndRunPartition(mapObj, constraints, windowSize, stepSize, prefix, s
         for i in range(1,rnaLength-windowSize,stepSize):
             cut_i = i
             cut_j = i+windowSize-1
-            fname = "{0}/{1}_{2}_{3}".format(dirname,prefix,cut_i,cut_j)
+            fname = f"{dirname}/{prefix}_{cut_i}_{cut_j}"
             genFiles(mapObj,constraints,{0:[],1:[]},cut_i,cut_j,fname)
             
             foldCMD = "partition {0}.seq {0}.pfs -sh {0}.shape -sm {1} -si {2} -md {3} -C {0}.const".format(fname, shapeSlope,shapeIntercept, maxDist)
@@ -496,7 +496,7 @@ def generateAndRunPartition(mapObj, constraints, windowSize, stepSize, prefix, s
         for i in [-100,-50,50,100]:
             # 5' end
             cut5prime_j = windowSize+i
-            fname = "{0}/{1}_{2}_{3}".format(dirname,prefix,1,cut5prime_j)
+            fname = f"{dirname}/{prefix}_{1}_{cut5prime_j}"
             genFiles(mapObj,constraints,{0:[],1:[]},1,cut5prime_j,fname)
             
             foldCMD = "partition {0}.seq {0}.pfs -sh {0}.shape -sm {1} -si {2} -md {3} -C {0}.const".format(fname, shapeSlope,shapeIntercept, maxDist)
@@ -509,7 +509,7 @@ def generateAndRunPartition(mapObj, constraints, windowSize, stepSize, prefix, s
             
             # 3' end
             cut3prime_i = rnaLength-windowSize + i
-            fname = "{0}/{1}_{2}_{3}".format(dirname,prefix,cut3prime_i,rnaLength)
+            fname = f"{dirname}/{prefix}_{cut3prime_i}_{rnaLength}"
             genFiles(mapObj,constraints,{0:[],1:[]},cut3prime_i,rnaLength,fname)
             
             foldCMD = "partition {0}.seq {0}.pfs -sh {0}.shape -sm {1} -si {2} -md {3} -C {0}.const".format(fname, shapeSlope,shapeIntercept, maxDist)
@@ -552,10 +552,10 @@ def runCheck():
             subprocess.call([each], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             count += 1
         except OSError:
-            print "Program {0} not found in the path".format(each)
+            print(f"Program {each} not found in the path")
     
     if len(neededCmds) != count:
-        print "...exiting"
+        print("...exiting")
         sys.exit()
     
     try:
@@ -563,8 +563,8 @@ def runCheck():
         datapath = os.environ.get("DATAPATH")
         os.listdir(datapath)
     except:
-        print "DATAPATH is not set. RNAstructure will not run"
-        print "...exiting"
+        print("DATAPATH is not set. RNAstructure will not run")
+        print("...exiting")
         sys.exit()
 
 
@@ -573,13 +573,13 @@ def parseArgs():
     def parseTXT(fIN):
         data = {}
         lineNum = 0
-        for line in open(fIN, "rU").readlines():
+        for line in open(fIN, "r").readlines():
             x = line.rstrip().split()
             
             try:
-                x = map(int,x)
+                x = list(map(int,x))
             except:
-                print "Unexpected character in {0}...exiting".format(fIN)
+                print(f"Unexpected character in {fIN}...exiting")
                 return 0
             
             # initialize an array obj for the first line
@@ -718,7 +718,7 @@ def parseArgs():
         
         # check to make sure that the pks have partners
         if len(ds[0]) != len(ds[1]):
-            print "pkRegion file incorrectly formatted...exiting"
+            print("pkRegion file incorrectly formatted...exiting")
             sys.exit()
     except:
         # if file not given, fill empty bps
@@ -761,7 +761,7 @@ def genFiles(mapObj, ssConstraints, dsConstraints, ntStart, ntEnd, fName):
         w = open(fOUT, "w")
         
         for i in range(len(SHAPEdata)):
-            w.write("{0}\t{1}\n".format(i+1,SHAPEdata[i]))
+            w.write(f"{i + 1}\t{SHAPEdata[i]}\n")
         w.close()
         return fOUT
         
@@ -773,7 +773,7 @@ def genFiles(mapObj, ssConstraints, dsConstraints, ntStart, ntEnd, fName):
         if not name:
             name = str(fOUT)
         w = open(fOUT, "w")
-        w.write(";\n\n{0}\n\n".format(name))
+        w.write(f";\n\n{name}\n\n")
         
         for i in range(len(sequence)):
             w.write(sequence[i])
@@ -791,11 +791,11 @@ def genFiles(mapObj, ssConstraints, dsConstraints, ntStart, ntEnd, fName):
         
         w = open(fOUT, "w")
         w.write("DS:\n-1\nSS:\n")
-        for const in ssConstraint: w.write("{0}\n".format(const))
+        for const in ssConstraint: w.write(f"{const}\n")
         w.write("-1\nMod:\n-1\nPairs:\n")
         
         for i in range(len(dsConstraint[0])):
-            line = "{0} {1}\n".format( dsConstraint[0][i], dsConstraint[1][i])
+            line = f"{dsConstraint[0][i]} {dsConstraint[1][i]}\n"
             w.write(line)
                 
         w.write("-1 -1\nFMN:\n-1\nForbids:\n-1 -1\nMicroarray Constraints:\n0\n")
@@ -850,10 +850,10 @@ def mainAssemble(folderPath, trim=300):
     targetDP = {}
     
     # load all the dp files into memory
-    numFiles = len(filter( lambda x:x[-2:]=="dp",os.listdir(folderPath)  ) )
+    numFiles = len([x for x in os.listdir(folderPath) if x[-2:]=="dp"] )
     
     num = 1
-    print "reading files..."
+    print("reading files...")
     
     for dpFileName in os.listdir(folderPath):
         #ignore all files that are not dp files
@@ -872,8 +872,8 @@ def mainAssemble(folderPath, trim=300):
     
     # find the first and last dotplot files in sequence
     # we only want to trim one side of those
-    firstDP = min([i[0] for i in targetDP.keys()])
-    lastDP  = max([i[1] for i in targetDP.keys()])
+    firstDP = min([i[0] for i in list(targetDP.keys())])
+    lastDP  = max([i[1] for i in list(targetDP.keys())])
     
     
     #container for the final dp structure
@@ -884,13 +884,13 @@ def mainAssemble(folderPath, trim=300):
     coverage = []
     num = 1
     
-    print "trim and resorting..."
+    print("trim and resorting...")
     # average slipped pairs, renumber, and trim the ends
     # the dpKey is the starting number of window
-    if len(targetDP.keys()) == 1:
-        return targetDP[targetDP.keys()[0]]
+    if len(list(targetDP.keys())) == 1:
+        return targetDP[list(targetDP.keys())[0]]
     
-    for dpKey in targetDP.keys():
+    for dpKey in list(targetDP.keys()):
         
         #print "resorting window at {0}...".format(dpKey)
         progress(num,numFiles)
@@ -976,7 +976,7 @@ def concatonateDP(dpObj, coverage):
     oldFilter = np.zeros_like(dp['logBP'])
     dp['logBP'] = 10**( -dp['logBP'])
     
-    print "merging dotplots..."
+    print("merging dotplots...")
     for i,j in pairs:
         i = int(i)
         j = int(j)
@@ -1018,7 +1018,7 @@ def concatonateDP(dpObj, coverage):
             oldFilter = np.zeros_like(dp['logBP'])
             #print n, len(dp['logBP'])
     
-    print "DONE!"
+    print("DONE!")
     
     
     outObj.dp['logBP'] = -np.log10(outObj.dp['logBP'])
@@ -1037,7 +1037,7 @@ def progress(num,outof):
     line += meter[:width-4]
     line += ']'
     
-    line += ' %s / %s' % (int(num),int(outof))
+    line += f' {int(num)} / {int(outof)}'
     if num == 1:
         sys.stdout.write(line)
     elif num==outof:
@@ -1119,13 +1119,13 @@ def MasterModel_findOverlapPairs(ctObjectList, baseCount):
     # then add them to the final 
     outpairs = {}
 
-    for key in bpairs.keys():
+    for key in list(bpairs.keys()):
         #print key
         # key[0] = i, key[1] = j
         if bpairs[key]/float(min(baseCount[key[0]-1],baseCount[key[1]-1])) > 0.5:
             outpairs[key] = bpairs[key]
 
-    return outpairs.keys()
+    return list(outpairs.keys())
 
 ############################
 # SHANNON SHAPE SEARCH FUNCTIONS
@@ -1182,7 +1182,7 @@ def mainShannonFunc(shapeReact, shannonEntropy, saveName, ctStruct):
 			#V1.1 Update: loop had started at 1, this skipped the first
 			#region and resulted in mis-assigned regions
 			for i in range(0,seqLength+1):
-				if pstat:print addnums,
+				if pstat:print(addnums, end=' ')
 				if addnums:
 					addList.append(i)
 				if not addnums:
@@ -1250,7 +1250,7 @@ def mainShannonFunc(shapeReact, shannonEntropy, saveName, ctStruct):
 	a = np.array(selectCutsites(shape_culled,shannon_culled,len(shape)))
 	b=a>0
 	
-	print "####### shannonShapeTransitions #######"
+	print("####### shannonShapeTransitions #######")
 	#print findTransitions(b,0.5)
 	regions = findTransitions(b,0.5)
 
@@ -1309,7 +1309,7 @@ def mainShannonFunc(shapeReact, shannonEntropy, saveName, ctStruct):
 	plt.xlim(0,5000)
 
 	#plot the highlighted range
-	lowShannonLowSHAPE = plt.fill_between(range(len(b)),b*3.0,0,alpha=0.2,color='blue', label = "Low Shannon low SHAPE")
+	lowShannonLowSHAPE = plt.fill_between(list(range(len(b))),b*3.0,0,alpha=0.2,color='blue', label = "Low Shannon low SHAPE")
 
 	#    for i in range(len(b)):
 	#        print i+1, float(b[i])
@@ -1380,12 +1380,12 @@ def mainShannonFunc(shapeReact, shannonEntropy, saveName, ctStruct):
 			regionPair.append([regions[-1][0], len(shape)])
 	
 	except:
-		print "No Defined Regions"
+		print("No Defined Regions")
 		regionPair.append([1,len(shape)])
 
-	print "Unexpanded regions:"
+	print("Unexpanded regions:")
 	for i,j in regionPair:
-		print i,"-",j
+		print(i,"-",j)
 	
 	allPair = ctStruct.pairList()
 
@@ -1409,9 +1409,9 @@ def mainShannonFunc(shapeReact, shannonEntropy, saveName, ctStruct):
 			
 		expandedRegion.append((new_i,new_j))
 
-	print "Expanded regions:"
+	print("Expanded regions:")
 	for i,j in expandedRegion:
-		print i,"-",j
+		print(i,"-",j)
 
 	return expandedRegion
     
