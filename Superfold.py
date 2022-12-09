@@ -114,9 +114,8 @@ def main():
     
     
     # set the results directory
-    resultsDir = "results_"+args.safeName
-    
-    print(resultsDir)
+    resultsDir = f'{args.basePath}/results_{args.safeName}'
+    print(f'Writing to: {resultsDir}')
     try:
         os.mkdir(resultsDir)
     except:
@@ -128,9 +127,10 @@ def main():
         pass
     
     # set location of the logfile
-    logFile = open("{0}/log_{0}.txt".format(resultsDir),"a")
+    logPath = f'{resultsDir}/log_{args.safeName}.txt'
+    logFile = open(logPath, "a")
     sys.stdout = logFile
-    print("log file location: {0}/log_{0}.txt".format(resultsDir), file=sys.stderr)
+    print(f"log file location: {logPath}", file=sys.stderr)
     
     print("\n"*3,"#"*51)
     print("""#    _____                     ______    _     _  #
@@ -191,7 +191,7 @@ def main():
     
     initialStructure = CT()
     if not debug:
-        initialStructure = generateAndRunFold(args.mapObj, args.allConstraints,dsConstraint, args.foldWindowSize, args.foldStepSize, args.safeName,args.SHAPEslope,args.SHAPEintercept,args.np, args.maxPairingDist)
+        initialStructure = generateAndRunFold(args.mapObj, args.allConstraints,dsConstraint, args.foldWindowSize, args.foldStepSize, args.safeName, args.SHAPEslope, args.SHAPEintercept, args.np, args.maxPairingDist)
     
     # write the folded structure
     initialStructureFileName = f"{resultsDir}/merged_{args.safeName}.ct"
@@ -434,7 +434,6 @@ def generateAndRunFold(mapObj, constraints, dsConstraints, windowSize, stepSize,
     
 
 def generateAndRunPartition(mapObj, constraints, windowSize, stepSize, prefix, shapeSlope, shapeIntercept, nprocs, maxDist):
-    
     #make list of commands, skip those files that have already been calculated
     #run partition function
     #make list of probability plot commands and run
@@ -467,8 +466,8 @@ def generateAndRunPartition(mapObj, constraints, windowSize, stepSize, prefix, s
         genFiles(mapObj,constraints,{0:[],1:[]},cut_i,cut_j,fname)
         
         foldCMD = "partition {0}.seq {0}.pfs -sh {0}.shape -sm {1} -si {2} -md {3} -C {0}.const".format(fname, shapeSlope,shapeIntercept, maxDist)
-        
         parseFold = "ProbabilityPlot {0}.pfs {0}.dp -t".format(fname)
+
         jobQueue1.append(shlex.split(foldCMD))
         jobQueue2.append(shlex.split(parseFold))
         
@@ -737,18 +736,19 @@ def parseArgs():
     # generate a safe short name for the constraint, shape, and sequence files
     # by hashing the names of the input values, changing any input will make a new hash
     m = hashlib.md5()
-    m.update(str(o.mapFile))
-    m.update(str(o.ssRegion))
-    m.update(str(o.pkRegion))
-    m.update(str(o.differentialFile))
-    m.update(str(o.foldWindowSize))
-    m.update(str(o.partitionWindowSize))
-    m.update(str(o.maxPairingDist))
-    m.update(str(o.partitionStepSize))
+    m.update(str(o.mapFile).encode('utf-8'))
+    m.update(str(o.ssRegion).encode('utf-8'))
+    m.update(str(o.pkRegion).encode('utf-8'))
+    m.update(str(o.differentialFile).encode('utf-8'))
+    m.update(str(o.foldWindowSize).encode('utf-8'))
+    m.update(str(o.partitionWindowSize).encode('utf-8'))
+    m.update(str(o.maxPairingDist).encode('utf-8'))
+    m.update(str(o.partitionStepSize).encode('utf-8'))
     
-    o.safeName = o.mapFile[:] +"_"+ m.hexdigest()[:4]
-    
-    
+    #o.safeName = o.mapFile[:] + "_" + m.hexdigest()[:4]
+    o.basePath = os.path.dirname(o.mapFile)
+    o.safeName = os.path.basename(o.mapFile[:] + "_" + m.hexdigest()[:4])
+
     return o
 
 
@@ -848,7 +848,7 @@ def mainAssemble(folderPath, trim=300):
     """
     
     targetDP = {}
-    
+
     # load all the dp files into memory
     numFiles = len([x for x in os.listdir(folderPath) if x[-2:]=="dp"] )
     
@@ -872,8 +872,8 @@ def mainAssemble(folderPath, trim=300):
     
     # find the first and last dotplot files in sequence
     # we only want to trim one side of those
-    firstDP = min([i[0] for i in list(targetDP.keys())])
-    lastDP  = max([i[1] for i in list(targetDP.keys())])
+    firstDP = min([i[0] for i in targetDP.keys()])
+    lastDP  = max([i[1] for i in targetDP.keys()])
     
     
     #container for the final dp structure
